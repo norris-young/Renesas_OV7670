@@ -21,17 +21,17 @@ const uint8_t ov7670_init_reg_tbl[][2]=
     {0x3b, 0x0a},
 
     //Output format
-    {0x12, 0x14},//QVGA(320*240)，RGB565
-//    {0x12, 0x10},//QVGA, YUV
+//    {0x12, 0x14},//QVGA(320*240)，RGB565
+    {0x12, 0x10},//QVGA, YUV
 
     //RGB555/565 option(must set COM7[2] = 1 and COM7[0] = 0)
-    {0x40, 0x90},//RGB565,effective only when RGB444[1] is low
-    {0x8c, 0x00},
+//    {0x40, 0x90},//RGB565,effective only when RGB444[1] is low
+//    {0x8c, 0x00},
 
     //YUV:YUYV 4:2:2
-//    {0x40, 0xc0},
-//    {0x3a, 0x04},
-//    {0x3d, 0x88},
+    {0x40, 0xc0},
+    {0x3a, 0x12},
+    {0x3d, 0x88},
 
     //Special effects - 特效
     //normal

@@ -37,7 +37,7 @@ void send_img(unsigned char *image, int width, int height)
     while(!send_end);
     send_end = false;
     R_SCI5_Serial_Send(start_c, sizeof(start_c));
-    for (int i = 0; i < width * height * 2; i++) {
+    for (int i = 1; i < width * height * 2; i+=2) {
         while(!send_end);
         send_end = false;
         R_SCI5_Serial_Send(image + i, 1);
