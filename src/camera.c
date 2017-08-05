@@ -7,6 +7,7 @@
 
 #include "platform.h"
 #include "r_cg_icu.h"
+#include "r_cg_sci.h"
 
 #include "OV7670.h"
 #include "OV7670cfg.h"
@@ -22,10 +23,18 @@ static uint8_t img[CAM_WIDTH * CAM_HEIGHT * 2];
 static const int collect_w_step = OV_WIDTH / CAM_WIDTH;
 static const int collect_h_step = OV_HEIGHT / CAM_HEIGHT;
 
+static const int test_step = 1;
+
+/* public variables. */
+volatile bool send_end = true;
+unsigned char start_c[2] = {0x01, 0xfe};
+unsigned char end_c[2] = {0xfe, 0x01};
+
 /* private functions declarations. */
 static void reset_read_FIFO(void);
 static void get_data(int i, int j);
 static void get_none(void);
+static void cam_test(void);
 
 /* public functions definitions. */
 int cam_init(void)
@@ -50,6 +59,7 @@ int cam_init(void)
 
     /* start get image. */
     start_get_image = true;
+    R_SCI5_Start();
     R_ICU_IRQ5_Start();
     return 0;
 }
@@ -61,6 +71,9 @@ int read_img_from_FIFO(void)
     } else {
         OE = SET_BIT_LOW;
         reset_read_FIFO();
+#if CAM_TEST
+        cam_test();
+#else
         for (int j = 0; j < OV_WIDTH; j++) {
             for (int i = OV_HEIGHT - 1; i >= 0; i--) {
                 if ((i % collect_h_step) == 0 && (j % collect_w_step) == 0) {
@@ -70,6 +83,7 @@ int read_img_from_FIFO(void)
                 }
             }
         }
+#endif
         OE = SET_BIT_HIGH;
 
         /* read over, start next image. */
@@ -128,4 +142,29 @@ static void get_none(void)
     RCK_H;
     RCK_L;
     RCK_H;
+}
+
+static void cam_test(void)
+{
+    uint16_t tx_buf;
+    while(!send_end);
+    send_end = false;
+    R_SCI5_Serial_Send(start_c, sizeof(start_c));
+    for (int i = 0; i < OV_WIDTH * OV_HEIGHT; i++) {
+        RCK_L;
+        tx_buf = FIFO_DATA;
+        RCK_H;
+        tx_buf <<= 8;
+        RCK_L;
+        tx_buf |= FIFO_DATA;
+        RCK_H;
+        if (((i / OV_WIDTH) % test_step) == 0 && ((i % OV_WIDTH) % test_step) == 0) {
+            while(!send_end);
+            send_end = false;
+            R_SCI5_Serial_Send((void *)&tx_buf, sizeof(tx_buf));
+        }
+    }
+    while(!send_end);
+    send_end = false;
+    R_SCI5_Serial_Send(end_c, sizeof(end_c));
 }

@@ -15,38 +15,34 @@
 
 #include "camera.h"
 
-volatile bool send_end = true;
-unsigned char start_c = 0x01;
-unsigned char end_c = 0xfe;
+void send_img(unsigned char *image, int width, int height);
 
 void main(void)
 {
     unsigned char *image;
     int width, height;
 
-    R_SCI5_Start();
     cam_init();
 
     while (1) {
         if (read_img_from_FIFO()) {
             get_img(&image, &width, &height);
-            while(!send_end);
-            send_end = false;
-            R_SCI5_Serial_Send(&start_c, 1);
-            while(!send_end);
-            send_end = false;
-            R_SCI5_Serial_Send(&end_c, 1);
-            for (int i = 0; i < width * height * 2; i++) {
-                while(!send_end);
-                send_end = false;
-                R_SCI5_Serial_Send(image + i, 1);
-            }
-            while(!send_end);
-            send_end = false;
-            R_SCI5_Serial_Send(&end_c, 1);
-            while(!send_end);
-            send_end = false;
-            R_SCI5_Serial_Send(&start_c, 1);
+            send_img(image, width, height);
         }
     }
+}
+
+void send_img(unsigned char *image, int width, int height)
+{
+    while(!send_end);
+    send_end = false;
+    R_SCI5_Serial_Send(start_c, sizeof(start_c));
+    for (int i = 0; i < width * height * 2; i++) {
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(image + i, 1);
+    }
+    while(!send_end);
+    send_end = false;
+    R_SCI5_Serial_Send(end_c, sizeof(end_c));
 }
