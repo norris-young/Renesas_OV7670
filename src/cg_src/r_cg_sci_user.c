@@ -23,7 +23,7 @@
 * Device(s)    : R5F523T5AxFM
 * Tool-Chain   : CCRX
 * Description  : This file implements device driver for SCI module.
-* Creation Date: 17.8.3
+* Creation Date: 17.8.5
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -44,12 +44,147 @@ Includes
 /***********************************************************************************************************************
 Global variables and functions
 ***********************************************************************************************************************/
+extern uint8_t * gp_sci1_tx_address;                /* SCI1 send buffer address */
+extern uint16_t  g_sci1_tx_count;                   /* SCI1 send data number */
+extern uint8_t * gp_sci1_rx_address;                /* SCI1 receive buffer address */
+extern uint16_t  g_sci1_rx_count;                   /* SCI1 receive data number */
+extern uint16_t  g_sci1_rx_length;                  /* SCI1 receive data length */
 extern uint8_t * gp_sci5_tx_address;                /* SCI5 send buffer address */
 extern uint16_t  g_sci5_tx_count;                   /* SCI5 send data number */
 /* Start user code for global. Do not edit comment generated here */
-extern volatile bool send_end;
+extern void std_tx_callback(void);
+extern void cam_commu_tx_callback(void);
 /* End user code. Do not edit comment generated here */
 
+/***********************************************************************************************************************
+* Function Name: r_sci1_transmit_interrupt
+* Description  : None
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+#if FAST_INTERRUPT_VECTOR == VECT_SCI1_TXI1
+#pragma interrupt r_sci1_transmit_interrupt(vect=VECT(SCI1,TXI1),fint)
+#else
+#pragma interrupt r_sci1_transmit_interrupt(vect=VECT(SCI1,TXI1))
+#endif
+static void r_sci1_transmit_interrupt(void)
+{
+    if (0U < g_sci1_tx_count)
+    {
+        SCI1.TDR = *gp_sci1_tx_address;
+        gp_sci1_tx_address++;
+        g_sci1_tx_count--;
+    }
+    else
+    {
+        SCI1.SCR.BIT.TIE = 0U;
+        SCI1.SCR.BIT.TEIE = 1U;
+    }
+}
+
+/***********************************************************************************************************************
+* Function Name: r_sci1_transmitend_interrupt
+* Description  : None
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+#if FAST_INTERRUPT_VECTOR == VECT_SCI1_TEI1
+#pragma interrupt r_sci1_transmitend_interrupt(vect=VECT(SCI1,TEI1),fint)
+#else
+#pragma interrupt r_sci1_transmitend_interrupt(vect=VECT(SCI1,TEI1))
+#endif
+static void r_sci1_transmitend_interrupt(void)
+{
+    /* Set TXD1 pin */
+    PORTD.PMR.BYTE &= 0xF7U;
+    SCI1.SCR.BIT.TIE = 0U;
+    SCI1.SCR.BIT.TE = 0U;
+    SCI1.SCR.BIT.TEIE = 0U;
+
+    r_sci1_callback_transmitend();
+}
+/***********************************************************************************************************************
+* Function Name: r_sci1_receive_interrupt
+* Description  : None
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+#if FAST_INTERRUPT_VECTOR == VECT_SCI1_RXI1
+#pragma interrupt r_sci1_receive_interrupt(vect=VECT(SCI1,RXI1),fint)
+#else
+#pragma interrupt r_sci1_receive_interrupt(vect=VECT(SCI1,RXI1))
+#endif
+static void r_sci1_receive_interrupt(void)
+{
+    if (g_sci1_rx_length > g_sci1_rx_count)
+    {
+        *gp_sci1_rx_address = SCI1.RDR;
+        gp_sci1_rx_address++;
+        g_sci1_rx_count++;
+
+        if (g_sci1_rx_length <= g_sci1_rx_count)
+        {
+            r_sci1_callback_receiveend();
+        }
+    }
+}
+/***********************************************************************************************************************
+* Function Name: r_sci1_receiveerror_interrupt
+* Description  : None
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+#if FAST_INTERRUPT_VECTOR == VECT_SCI1_ERI1
+#pragma interrupt r_sci1_receiveerror_interrupt(vect=VECT(SCI1,ERI1),fint)
+#else
+#pragma interrupt r_sci1_receiveerror_interrupt(vect=VECT(SCI1,ERI1))
+#endif
+static void r_sci1_receiveerror_interrupt(void)
+{
+    uint8_t err_type;
+
+    r_sci1_callback_receiveerror();
+
+    /* Clear overrun, framing and parity error flags */
+    err_type = SCI1.SSR.BYTE;
+    err_type &= 0xC7U;
+    err_type |= 0xC0U;
+    SCI1.SSR.BYTE = err_type;
+}
+/***********************************************************************************************************************
+* Function Name: r_sci1_callback_transmitend
+* Description  : This function is a callback function when SCI1 finishes transmission.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+static void r_sci1_callback_transmitend(void)
+{
+    /* Start user code. Do not edit comment generated here */
+    cam_commu_tx_callback();
+    /* End user code. Do not edit comment generated here */
+}
+/***********************************************************************************************************************
+* Function Name: r_sci1_callback_receiveend
+* Description  : This function is a callback function when SCI1 finishes reception.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+static void r_sci1_callback_receiveend(void)
+{
+    /* Start user code. Do not edit comment generated here */
+    /* End user code. Do not edit comment generated here */
+}
+/***********************************************************************************************************************
+* Function Name: r_sci1_callback_receiveerror
+* Description  : This function is a callback function when SCI1 reception encounters error.
+* Arguments    : None
+* Return Value : None
+***********************************************************************************************************************/
+static void r_sci1_callback_receiveerror(void)
+{
+    /* Start user code. Do not edit comment generated here */
+    /* End user code. Do not edit comment generated here */
+}
 /***********************************************************************************************************************
 * Function Name: r_sci5_transmit_interrupt
 * Description  : None
@@ -106,7 +241,7 @@ static void r_sci5_transmitend_interrupt(void)
 static void r_sci5_callback_transmitend(void)
 {
     /* Start user code. Do not edit comment generated here */
-    send_end = true;
+    std_tx_callback();
     /* End user code. Do not edit comment generated here */
 }
 

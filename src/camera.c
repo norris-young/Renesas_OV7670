@@ -19,7 +19,7 @@ static bool first_VSYNC = true;
 static bool start_get_image = false;
 static bool new_frame_FIFO_ready = false;
 
-static uint8_t img[CAM_WIDTH * CAM_HEIGHT * 2];
+static uint8_t img[CAM_WIDTH * CAM_HEIGHT];
 static const int collect_w_step = OV_WIDTH / CAM_WIDTH;
 static const int collect_h_step = OV_HEIGHT / CAM_HEIGHT;
 
@@ -101,6 +101,11 @@ void get_img(unsigned char **image, int *width, int *height)
     *height = CAM_HEIGHT;
 }
 
+void std_tx_callback(void)
+{
+    send_end = true;
+}
+
 void IRQ5_IntHandler(void)
 {
     if (first_VSYNC && start_get_image) {
@@ -129,10 +134,12 @@ static void reset_read_FIFO(void)
 static void get_data(int i, int j)
 {
     RCK_L;
-    img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2 + 1] = FIFO_DATA;
+//    img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2 + 1] = FIFO_DATA;
+    img[i/collect_h_step * CAM_WIDTH + j/collect_w_step] = FIFO_DATA;
     RCK_H;
     RCK_L;
-    img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2] = FIFO_DATA;
+//    img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2] = FIFO_DATA;
+
     RCK_H;
 }
 

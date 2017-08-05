@@ -10,8 +10,8 @@
 
 #define CAM_TEST    0
 
-#define CAM_WIDTH   40
-#define CAM_HEIGHT  40
+#define CAM_WIDTH   80
+#define CAM_HEIGHT  80
 
 #define RCK_L       RCK = SET_BIT_LOW
 #define RCK_H       RCK = SET_BIT_HIGH

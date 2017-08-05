@@ -23,7 +23,7 @@
 * Device(s)    : R5F523T5AxFM
 * Tool-Chain   : CCRX
 * Description  : This file implements system initializing function.
-* Creation Date: 17.8.3
+* Creation Date: 17.8.5
 ***********************************************************************************************************************/
 
 /***********************************************************************************************************************
@@ -80,6 +80,7 @@ void R_Systeminit(void)
     R_CGC_Create();
     R_ICU_Create();
     R_PORT_Create();
+    R_SCI1_Create();
     R_SCI5_Create();
 
     /* Register undefined interrupt */

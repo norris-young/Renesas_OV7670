@@ -6,6 +6,7 @@
  */
 
 #include <platform.h>
+#include "r_cg_port.h"
 
 #include "soft_SCCB.h"
 

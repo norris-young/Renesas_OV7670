@@ -3,15 +3,30 @@
     <cgModuleInfos>
         <moduleName>CG</moduleName>
         <peripheralInfo>
-            <peripheralName>port9</peripheralName>
+            <peripheralName>portb</peripheralName>
             <pinInfo>
-                <pinName>P94</pinName>
-                <pinPort>P94</pinPort>
+                <pinName>PB5</pinName>
+                <pinPort>PB5</pinPort>
                 <pinOption>FIXED</pinOption>
             </pinInfo>
             <pinInfo>
-                <pinName>P92</pinName>
-                <pinPort>P92</pinPort>
+                <pinName>PB4</pinName>
+                <pinPort>PB4</pinPort>
+                <pinOption>FIXED</pinOption>
+            </pinInfo>
+            <pinInfo>
+                <pinName>PB4</pinName>
+                <pinPort>POE8#</pinPort>
+                <pinOption>FIXED</pinOption>
+            </pinInfo>
+            <pinInfo>
+                <pinName>PB3</pinName>
+                <pinPort>PB3</pinPort>
+                <pinOption>FIXED</pinOption>
+            </pinInfo>
+            <pinInfo>
+                <pinName>PB1</pinName>
+                <pinPort>PB1</pinPort>
                 <pinOption>FIXED</pinOption>
             </pinInfo>
         </peripheralInfo>
@@ -55,30 +70,15 @@
             </pinInfo>
         </peripheralInfo>
         <peripheralInfo>
-            <peripheralName>portb</peripheralName>
+            <peripheralName>sci1</peripheralName>
             <pinInfo>
-                <pinName>PB5</pinName>
-                <pinPort>PB5</pinPort>
+                <pinName>RXD1</pinName>
+                <pinPort>PD5</pinPort>
                 <pinOption>FIXED</pinOption>
             </pinInfo>
             <pinInfo>
-                <pinName>PB4</pinName>
-                <pinPort>PB4</pinPort>
-                <pinOption>FIXED</pinOption>
-            </pinInfo>
-            <pinInfo>
-                <pinName>PB4</pinName>
-                <pinPort>POE8#</pinPort>
-                <pinOption>FIXED</pinOption>
-            </pinInfo>
-            <pinInfo>
-                <pinName>PB3</pinName>
-                <pinPort>PB3</pinPort>
-                <pinOption>FIXED</pinOption>
-            </pinInfo>
-            <pinInfo>
-                <pinName>PB1</pinName>
-                <pinPort>PB1</pinPort>
+                <pinName>TXD1</pinName>
+                <pinPort>PD3</pinPort>
                 <pinOption>FIXED</pinOption>
             </pinInfo>
         </peripheralInfo>
@@ -123,6 +123,19 @@
             <pinInfo>
                 <pinName>P23</pinName>
                 <pinPort>P23</pinPort>
+                <pinOption>FIXED</pinOption>
+            </pinInfo>
+        </peripheralInfo>
+        <peripheralInfo>
+            <peripheralName>port9</peripheralName>
+            <pinInfo>
+                <pinName>P94</pinName>
+                <pinPort>P94</pinPort>
+                <pinOption>FIXED</pinOption>
+            </pinInfo>
+            <pinInfo>
+                <pinName>P92</pinName>
+                <pinPort>P92</pinPort>
                 <pinOption>FIXED</pinOption>
             </pinInfo>
         </peripheralInfo>
