@@ -18,7 +18,23 @@
 static bool first_VSYNC = true;
 static int  vsync_num = 0;
 
+#if RGB565
+
 static uint8_t img[CAM_WIDTH * CAM_HEIGHT * 2];
+
+#endif
+
+#if YUV_UYVY
+
+static uint8_t img[CAM_WIDTH * CAM_HEIGHT];
+
+#endif
+
+#if SHOW_FPS
+
+static unsigned int frame_num = 0;
+
+#endif
 
 #if !CAM_TEST
 
@@ -38,14 +54,20 @@ unsigned char end_c[2] = {0xfe, 0x01};
 static void reset_read_FIFO(void);
 
 #if CAM_TEST
+
 static void cam_test(void);
+
 #else
+
 static void get_data(int i, int j);
 static void get_none(void);
+
 #endif
 
 #if SEND_IMG
+
 static void send_img(void);
+
 #endif
 
 /* public functions definitions. */
@@ -101,7 +123,9 @@ int read_img_from_FIFO(void)
     #endif
 #endif
         OE = SET_BIT_HIGH;
-
+#if SHOW_FPS
+        frame_num++;
+#endif
         /* read over, start next image. */
         vsync_num = 0;
         return 1;
@@ -168,7 +192,7 @@ static void reset_read_FIFO(void)
             RCK_H;
             while(!send_end);
             send_end = false;
-            R_SCI5_Serial_Send((void *)&tx_buf, sizeof(tx_buf));
+            R_SCI5_Serial_Send((uint8_t *)&tx_buf, sizeof(tx_buf));
         }
         while(!send_end);
         send_end = false;
@@ -239,11 +263,9 @@ static void reset_read_FIFO(void)
         while(!send_end);
         send_end = false;
         R_SCI5_Serial_Send(start_c, sizeof(start_c));
-        for (int i = 0; i < CAM_WIDTH * CAM_HEIGHT * 2; i++) {
-            while(!send_end);
-            send_end = false;
-            R_SCI5_Serial_Send(img + i, 1);
-        }
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(img, CAM_WIDTH * CAM_HEIGHT * 2);
         while(!send_end);
         send_end = false;
         R_SCI5_Serial_Send(end_c, sizeof(end_c));
@@ -258,11 +280,9 @@ static void reset_read_FIFO(void)
         while(!send_end);
         send_end = false;
         R_SCI5_Serial_Send(start_c, sizeof(start_c));
-        for (int i = 0; i < CAM_WIDTH * CAM_HEIGHT; i++) {
-            while(!send_end);
-            send_end = false;
-            R_SCI5_Serial_Send(img + i, 1);
-        }
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(img, CAM_WIDTH * CAM_HEIGHT);
         while(!send_end);
         send_end = false;
         R_SCI5_Serial_Send(end_c, sizeof(end_c));
