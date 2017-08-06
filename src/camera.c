@@ -18,11 +18,16 @@
 static bool first_VSYNC = true;
 static int  vsync_num = 0;
 
-static uint8_t img[CAM_WIDTH * CAM_HEIGHT];
+static uint8_t img[CAM_WIDTH * CAM_HEIGHT * 2];
+
+#if !CAM_TEST
+
 static const int collect_w_step = OV_WIDTH / CAM_WIDTH;
 static const int collect_h_step = OV_HEIGHT / CAM_HEIGHT;
+static int collect_w_step_index = 0;
+static int collect_h_step_index = 0;
 
-static const int test_step = 1;
+#endif
 
 /* public variables. */
 volatile bool send_end = true;
@@ -31,9 +36,17 @@ unsigned char end_c[2] = {0xfe, 0x01};
 
 /* private functions declarations. */
 static void reset_read_FIFO(void);
+
+#if CAM_TEST
+static void cam_test(void);
+#else
 static void get_data(int i, int j);
 static void get_none(void);
-static void cam_test(void);
+#endif
+
+#if SEND_IMG
+static void send_img(void);
+#endif
 
 /* public functions definitions. */
 int cam_init(void)
@@ -72,13 +85,20 @@ int read_img_from_FIFO(void)
 #else
         for (int j = 0; j < OV_WIDTH; j++) {
             for (int i = OV_HEIGHT - 1; i >= 0; i--) {
-                if ((i % collect_h_step) == 0 && (j % collect_w_step) == 0) {
+                if (collect_w_step_index == 0 && collect_h_step_index == 0) {
                     get_data(i, j);
                 } else {
                     get_none();
                 }
+                collect_h_step_index++;
+                if (collect_h_step_index == collect_h_step) collect_h_step_index = 0;
             }
+            collect_w_step_index++;
+            if (collect_w_step_index == collect_w_step) collect_w_step_index = 0;
         }
+    #if SEND_IMG
+            send_img();
+    #endif
 #endif
         OE = SET_BIT_HIGH;
 
@@ -103,13 +123,17 @@ void std_tx_callback(void)
 
 void IRQ5_IntHandler(void)
 {
-    WRST = SET_BIT_LOW;
-    WRST = SET_BIT_HIGH;
-    WEN = SET_BIT_HIGH;
-    if (first_VSYNC) {
-        first_VSYNC = false;
+    if(vsync_num == 0) {
+        WRST = SET_BIT_LOW;
+        WRST = SET_BIT_HIGH;
+        WEN = SET_BIT_HIGH;
+        if (first_VSYNC) {
+            first_VSYNC = false;
+        } else {
+            vsync_num++;
+        }
     } else {
-        vsync_num++;
+        WEN = SET_BIT_LOW;
     }
 }
 
@@ -124,47 +148,125 @@ static void reset_read_FIFO(void)
     RCK_H;
 }
 
-static void get_data(int i, int j)
-{
-    RCK_L;
-//    img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2 + 1] = FIFO_DATA;
-    img[i/collect_h_step * CAM_WIDTH + j/collect_w_step] = FIFO_DATA;
-    RCK_H;
-    RCK_L;
-//    img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2] = FIFO_DATA;
 
-    RCK_H;
-}
+#if CAM_TEST
+    #if RGB565
 
-static void get_none(void)
-{
-    RCK_L;
-    RCK_H;
-    RCK_L;
-    RCK_H;
-}
-
-static void cam_test(void)
-{
-    uint16_t tx_buf;
-    while(!send_end);
-    send_end = false;
-    R_SCI5_Serial_Send(start_c, sizeof(start_c));
-    for (int i = 0; i < OV_WIDTH * OV_HEIGHT; i++) {
-        RCK_L;
-        tx_buf = FIFO_DATA;
-        RCK_H;
-        tx_buf <<= 8;
-        RCK_L;
-        tx_buf |= FIFO_DATA;
-        RCK_H;
-        if (((i / OV_WIDTH) % test_step) == 0 && ((i % OV_WIDTH) % test_step) == 0) {
+    static void cam_test(void)
+    {
+        uint16_t tx_buf;
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(start_c, sizeof(start_c));
+        for (int i = 0; i < OV_WIDTH * OV_HEIGHT; i++) {
+            RCK_L;
+            tx_buf = FIFO_DATA;
+            RCK_H;
+            tx_buf <<= 8;
+            RCK_L;
+            tx_buf |= FIFO_DATA;
+            RCK_H;
             while(!send_end);
             send_end = false;
             R_SCI5_Serial_Send((void *)&tx_buf, sizeof(tx_buf));
         }
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(end_c, sizeof(end_c));
     }
-    while(!send_end);
-    send_end = false;
-    R_SCI5_Serial_Send(end_c, sizeof(end_c));
-}
+
+    #endif /* endif RGB565 */
+
+    #if YUV_UYVY /* only send Y signal. */
+
+    static void cam_test(void)
+    {
+        uint8_t tx_buf;
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(start_c, sizeof(start_c));
+        for (int i = 0; i < OV_WIDTH * OV_HEIGHT; i++) {
+            RCK_L;
+            RCK_H;
+            RCK_L;
+            tx_buf = FIFO_DATA;
+            RCK_H;
+            while(!send_end);
+            send_end = false;
+            R_SCI5_Serial_Send((void *)&tx_buf, sizeof(tx_buf));
+        }
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(end_c, sizeof(end_c));
+    }
+
+    #endif
+#else
+    static void get_data(int i, int j)
+    {
+    #if RGB565
+        RCK_L;
+        img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2 + 1] = FIFO_DATA;
+        RCK_H;
+        RCK_L;
+        img[(i/collect_h_step * CAM_WIDTH + j/collect_w_step) * 2] = FIFO_DATA;
+        RCK_H;
+    #endif
+
+    #if YUV_UYVY
+        RCK_L;
+        RCK_H;
+        RCK_L;
+        img[i/collect_h_step * CAM_WIDTH + j/collect_w_step] = FIFO_DATA;
+        RCK_H;
+    #endif
+    }
+
+    static void get_none(void)
+    {
+        RCK_L;
+        RCK_H;
+        RCK_L;
+        RCK_H;
+    }
+#endif
+
+#if SEND_IMG
+    #if RGB565
+
+    static void send_img(void)
+    {
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(start_c, sizeof(start_c));
+        for (int i = 0; i < CAM_WIDTH * CAM_HEIGHT * 2; i++) {
+            while(!send_end);
+            send_end = false;
+            R_SCI5_Serial_Send(img + i, 1);
+        }
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(end_c, sizeof(end_c));
+    }
+
+    #endif
+
+    #if YUV_UYVY
+
+    static void send_img(void)
+    {
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(start_c, sizeof(start_c));
+        for (int i = 0; i < CAM_WIDTH * CAM_HEIGHT; i++) {
+            while(!send_end);
+            send_end = false;
+            R_SCI5_Serial_Send(img + i, 1);
+        }
+        while(!send_end);
+        send_end = false;
+        R_SCI5_Serial_Send(end_c, sizeof(end_c));
+    }
+
+    #endif
+#endif

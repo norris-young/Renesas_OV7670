@@ -8,9 +8,12 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
+#define RGB565      1
+#define YUV_UYVY    0
 #define CAM_TEST    0
+#define SEND_IMG    1
 
-#define CAM_WIDTH   80
+#define CAM_WIDTH   60
 #define CAM_HEIGHT  80
 
 #define RCK_L       RCK = SET_BIT_LOW
