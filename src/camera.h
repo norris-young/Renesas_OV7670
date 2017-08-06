@@ -9,8 +9,8 @@
 #define CAMERA_H_
 
 #define SHOW_FPS    1
-#define CAM_TEST    0
-#define SEND_IMG    1
+#define CAM_TEST    1
+#define SEND_IMG    0
 
 #define CAM_WIDTH   60
 #define CAM_HEIGHT  80

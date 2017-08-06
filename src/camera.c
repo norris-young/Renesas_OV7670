@@ -183,6 +183,7 @@ static void reset_read_FIFO(void)
         send_end = false;
         R_SCI5_Serial_Send(start_c, sizeof(start_c));
         for (int i = 0; i < OV_WIDTH * OV_HEIGHT; i++) {
+            while(!send_end);
             RCK_L;
             tx_buf = FIFO_DATA;
             RCK_H;
@@ -190,7 +191,6 @@ static void reset_read_FIFO(void)
             RCK_L;
             tx_buf |= FIFO_DATA;
             RCK_H;
-            while(!send_end);
             send_end = false;
             R_SCI5_Serial_Send((uint8_t *)&tx_buf, sizeof(tx_buf));
         }
@@ -210,12 +210,12 @@ static void reset_read_FIFO(void)
         send_end = false;
         R_SCI5_Serial_Send(start_c, sizeof(start_c));
         for (int i = 0; i < OV_WIDTH * OV_HEIGHT; i++) {
+            while(!send_end);
             RCK_L;
             RCK_H;
             RCK_L;
             tx_buf = FIFO_DATA;
             RCK_H;
-            while(!send_end);
             send_end = false;
             R_SCI5_Serial_Send((void *)&tx_buf, sizeof(tx_buf));
         }
