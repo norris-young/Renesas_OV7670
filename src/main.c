@@ -31,8 +31,8 @@ void main(void)
     while (1) {
         if (read_img_from_FIFO()) {
             cnt++;
-            get_img(&image, &width, &height);
-            send_mid(image, width, height);
+//            get_img(&image, &width, &height);
+//            send_mid(image, width, height);
 //            send_img(image, width, height);
         }
     }

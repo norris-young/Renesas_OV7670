@@ -16,8 +16,7 @@
 
 /* private variables. */
 static bool first_VSYNC = true;
-static bool start_get_image = false;
-static bool new_frame_FIFO_ready = false;
+static int  vsync_num = 0;
 
 static uint8_t img[CAM_WIDTH * CAM_HEIGHT];
 static const int collect_w_step = OV_WIDTH / CAM_WIDTH;
@@ -58,7 +57,6 @@ int cam_init(void)
     }
 
     /* start get image. */
-    start_get_image = true;
     R_SCI5_Start();
     R_ICU_IRQ5_Start();
     return 0;
@@ -66,9 +64,7 @@ int cam_init(void)
 
 int read_img_from_FIFO(void)
 {
-    if (!new_frame_FIFO_ready) {
-        return 0;
-    } else {
+    if (vsync_num > 0) {
         OE = SET_BIT_LOW;
         reset_read_FIFO();
 #if CAM_TEST
@@ -87,11 +83,10 @@ int read_img_from_FIFO(void)
         OE = SET_BIT_HIGH;
 
         /* read over, start next image. */
-        new_frame_FIFO_ready = false;
-        first_VSYNC = true;
-        start_get_image = true;
+        vsync_num = 0;
         return 1;
     }
+    return 0;
 }
 
 void get_img(unsigned char **image, int *width, int *height)
@@ -108,15 +103,13 @@ void std_tx_callback(void)
 
 void IRQ5_IntHandler(void)
 {
-    if (first_VSYNC && start_get_image) {
-        WRST = SET_BIT_LOW;
-        WRST = SET_BIT_HIGH;
-        WEN = SET_BIT_HIGH;
+    WRST = SET_BIT_LOW;
+    WRST = SET_BIT_HIGH;
+    WEN = SET_BIT_HIGH;
+    if (first_VSYNC) {
         first_VSYNC = false;
-        start_get_image = false;
     } else {
-        WEN = SET_BIT_LOW;
-        new_frame_FIFO_ready = true;
+        vsync_num++;
     }
 }
 
