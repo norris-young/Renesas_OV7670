@@ -8,7 +8,7 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-#define SHOW_FPS    1
+#define SHOW_FPS    0
 #define CAM_TEST    0
 #define SEND_IMG    0
 

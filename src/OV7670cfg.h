@@ -28,7 +28,7 @@ const uint8_t ov7670_init_reg_tbl[][2]=
 
     //Output format
 #if RGB565
-    {0x12, 0x14},//QVGA(320*240)，RGB565
+    {0x12, 0x04},//QVGA(320*240)，RGB565
     //RGB555/565 option(must set COM7[2] = 1 and COM7[0] = 0)
     {0x40, 0xd0},//RGB565,effective only when RGB444[1] is low
     {0x8c, 0x00},
