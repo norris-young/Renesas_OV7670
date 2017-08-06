@@ -8,8 +8,6 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-#define RGB565      1
-#define YUV_UYVY    0
 #define CAM_TEST    0
 #define SEND_IMG    1
 

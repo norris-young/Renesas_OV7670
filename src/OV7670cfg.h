@@ -8,6 +8,9 @@
 #ifndef OV7670CFG_H_
 #define OV7670CFG_H_
 
+#define RGB565      1
+#define YUV_UYVY    0
+
 const uint8_t ov7670_init_reg_tbl[][2]=
 {
     //Frame Rate Adjustment for 24Mhz input clock
