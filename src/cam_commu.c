@@ -34,9 +34,10 @@ void send_mid(unsigned char *img, int width, int height)
                 tmp_y += j;
                 black_cnt++;
             }
-
-    mid[1] = (uint8_t)(tmp_x / black_cnt);
-    mid[2] = (uint8_t)(tmp_y / black_cnt);
+    if(black_cnt > 10) {
+        mid[1] = (uint8_t)(tmp_x / black_cnt);
+        mid[2] = (uint8_t)(tmp_y / black_cnt);
+    }
 
     while(!commu_tx_end);
     commu_tx_end = false;

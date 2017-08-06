@@ -27,7 +27,7 @@ void main(void)
     while (1) {
         if (read_img_from_FIFO()) {
             get_img(&image, &width, &height);
-//            send_mid(image, width, height);
+            send_mid(image, width, height);
         }
     }
 }

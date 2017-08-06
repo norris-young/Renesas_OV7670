@@ -8,8 +8,8 @@
 #ifndef OV7670CFG_H_
 #define OV7670CFG_H_
 
-#define RGB565      1
-#define YUV_UYVY    0
+#define RGB565      0
+#define YUV_UYVY    1
 
 const uint8_t ov7670_init_reg_tbl[][2]=
 {
@@ -22,6 +22,7 @@ const uint8_t ov7670_init_reg_tbl[][2]=
     {0x92, 0x00},
     {0x93, 0x00},
     {0x3b, 0x0a},
+    {0x0c, 0x04},
 
     {0x0d, 0x00},//全窗口
 
@@ -34,7 +35,7 @@ const uint8_t ov7670_init_reg_tbl[][2]=
 #endif
 
 #if YUV_UYVY
-    {0x12, 0x10},//QVGA, YUV
+    {0x12, 0x00},//QVGA, YUV
     //YUV: 4:2:2
     {0x40, 0xc0},
     {0x3a, 0x0d},//UYVY
@@ -186,11 +187,12 @@ const uint8_t ov7670_init_reg_tbl[][2]=
     {0xb8, 0x0a},
 
     //SCALING_xx寄存器
-    {0x70, 0x00},
-    {0x71, 0x00},
-    {0x72, 0x11},
-    {0x73, 0x08},
-    {0x3e, 0x00},
+    {0x70, 0x3a},
+    {0x71, 0x35},
+    {0x72, 0x22},
+    {0x73, 0xf2},
+    {0xa2, 0x02},//像素时钟延时
+    {0x3e, 0x1a},
 
     //ADC
     {0x37, 0x1d},//ADC控制ADC Control
@@ -199,8 +201,6 @@ const uint8_t ov7670_init_reg_tbl[][2]=
 
     //零杂的寄存器
     {0x92, 0x00},//空行低八位Dummy Line low 8 bits
-    {0xa2, 0x02},//像素时钟延时
-    {0x0c, 0x0c},
     {0x10, 0x00},
     {0x0f, 0x4b},
     {0x3c, 0x78},

@@ -8,8 +8,8 @@
 #ifndef OV7670_H_
 #define OV7670_H_
 
-#define OV_WIDTH   240
-#define OV_HEIGHT  320
+#define OV_WIDTH   120
+#define OV_HEIGHT  160
 
 #define RCK     PORT3.PODR.BIT.B0
 #define WEN     PORT2.PODR.BIT.B3

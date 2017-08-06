@@ -52,6 +52,7 @@ unsigned char end_c[2] = {0xfe, 0x01};
 
 /* private functions declarations. */
 static void reset_read_FIFO(void);
+static void OV7670_Window_Set(uint16_t sx,uint16_t sy,uint16_t width,uint16_t height);
 
 #if CAM_TEST
 
@@ -90,7 +91,7 @@ int cam_init(void)
         if (0 == softSCCB_WriteReg(ov7670_init_reg_tbl[i][0], ov7670_init_reg_tbl[i][1]))
             return 3;
     }
-
+    OV7670_Window_Set(12, 174, 240, 320);
     /* start get image. */
     R_SCI5_Start();
     R_ICU_IRQ5_Start();
@@ -172,6 +173,28 @@ static void reset_read_FIFO(void)
     RCK_H;
 }
 
+/* set window. */
+static void OV7670_Window_Set(uint16_t sx,uint16_t sy,uint16_t width,uint16_t height)
+{
+    uint16_t endx;
+    uint16_t endy;
+    uint8_t temp;
+    endx=sx+width*2;    //V*2
+    endy=sy+height*2;
+    if(endy>784)endy-=784;
+    softSCCB_ReadReg(0X03, &temp, 1);             //¶ÁÈ¡VrefÖ®Ç°µÄÖµ
+    temp&=0XF0;
+    temp|=((endx&0X03)<<2)|(sx&0X03);
+    softSCCB_WriteReg(0X03,temp);             //ÉèÖÃVrefµÄstartºÍendµÄ×îµÍ2Î»
+    softSCCB_WriteReg(0X19,sx>>2);            //ÉèÖÃVrefµÄstart¸ß8Î»
+    softSCCB_WriteReg(0X1A,endx>>2);          //ÉèÖÃVrefµÄendµÄ¸ß8Î»
+
+    softSCCB_ReadReg(0X32, &temp, 1);             //¶ÁÈ¡HrefÖ®Ç°µÄÖµ
+    temp&=0XC0;
+    temp|=((endy&0X07)<<3)|(sy&0X07);
+    softSCCB_WriteReg(0X17,sy>>3);            //ÉèÖÃHrefµÄstart¸ß8Î»
+    softSCCB_WriteReg(0X18,endy>>3);          //ÉèÖÃHrefµÄendµÄ¸ß8Î»
+}
 
 #if CAM_TEST
     #if RGB565
